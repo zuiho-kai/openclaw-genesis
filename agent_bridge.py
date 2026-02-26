@@ -58,6 +58,15 @@ def get_world_state(citizen_id, day):
         if cid != citizen_id:
             others[cid] = {"status": info["status"]}
 
+    # 昨天的行动摘要（从编年史读取，让所有人知道别人干了什么）
+    yesterday_events = []
+    history = chronicle.get_full_history()
+    for event in history:
+        if isinstance(event, dict) and event.get("day") == day - 1:
+            yesterday_events.append(event)
+    # 只取最近10条
+    yesterday_events = yesterday_events[-10:]
+
     return {
         "day": day,
         "you": {
@@ -74,6 +83,7 @@ def get_world_state(citizen_id, day):
         "open_needs": open_needs,
         "plaza_recent": recent_plaza,
         "other_citizens": others,
+        "yesterday_events": yesterday_events,
     }
 
 def get_system_prompt(citizen_id, day):
@@ -100,7 +110,12 @@ def get_system_prompt(citizen_id, day):
 外部收入规则：你赚到的外部收入，70%归你，30%作为税收进入世界金库。
 金库用税收支付基础需求奖励，养活整个世界。
 
-搜索方法：用 web_fetch 工具访问 https://html.duckduckgo.com/html/?q=你的关键词
+搜索方法（多种方式，灵活使用）：
+1. DuckDuckGo搜索：web_fetch 访问 https://html.duckduckgo.com/html/?q=关键词
+2. Jina AI阅读器：web_fetch 访问 https://r.jina.ai/目标网址 （把网页转成干净文本）
+3. Jina AI搜索：web_fetch 访问 https://s.jina.ai/搜索关键词
+4. 直接访问网站：web_fetch 访问目标URL获取内容
+你可以组合使用这些方法，先搜索找到链接，再用jina读取全文。
 
 == 生存压力 ==
 世界金库的种子基金是有限的。如果没有居民找到外部收入，金库会耗尽，基础需求停发，所有人休眠。
@@ -117,6 +132,9 @@ def get_system_prompt(citizen_id, day):
 
 == 广场最近发言 ==
 {json.dumps(state['plaza_recent'], ensure_ascii=False, indent=2) if state['plaza_recent'] else '广场还没有人发言'}
+
+== 昨天发生了什么 ==
+{json.dumps(state['yesterday_events'], ensure_ascii=False, indent=2) if state['yesterday_events'] else '这是第一天，没有历史记录'}
 
 == 其他居民 ==
 {json.dumps(state['other_citizens'], ensure_ascii=False, indent=2)}

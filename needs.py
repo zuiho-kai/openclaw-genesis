@@ -35,6 +35,13 @@ DAILY_NEEDS = [
         "external": False,
     },
     {
+        "id": "quality_review",
+        "title": "质量审核",
+        "desc": "评估昨天所有居民的产出质量，给出评分和改进建议。审核结果会广播给所有居民。",
+        "reward": 5,
+        "external": False,
+    },
+    {
         "id": "open_research",
         "title": "自由研究",
         "desc": "研究任何你认为有价值的主题，提交报告",

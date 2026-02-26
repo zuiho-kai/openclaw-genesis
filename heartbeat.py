@@ -240,6 +240,10 @@ def daily_settlement(day):
                         chronicle.record_event(day, "need_completed",
                             f"{winner} 完成了 '{need['title']}'，获得 {reward} token", winner)
 
+                        # 质量审核结果广播到广场，让所有居民看到
+                        if need["id"] == "quality_review" and winner_content:
+                            plaza.speak("世界系统", f"[质量审核 D{day}] by {winner}:\n{winner_content[:800]}", day)
+
                         # 外部产出发布到GitHub
                         if need.get("external", False) and winner_content:
                             if need["id"] == "daily_intel":
@@ -341,4 +345,7 @@ def run_daemon():
 
 
 if __name__ == "__main__":
+    import sys
+    # 确保输出不缓冲
+    sys.stdout.reconfigure(line_buffering=True)
     run_daemon()
