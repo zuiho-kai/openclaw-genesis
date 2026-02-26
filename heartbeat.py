@@ -165,7 +165,7 @@ def run_heartbeat_cycle(day):
 
     # 并行心跳检查
     results = {}
-    with ThreadPoolExecutor(max_workers=5) as executor:
+    with ThreadPoolExecutor(max_workers=2) as executor:
         futures = {}
         for cid in CITIZEN_IDS:
             ws = agent_bridge.get_world_state(cid, day)
@@ -190,7 +190,7 @@ def run_heartbeat_cycle(day):
         return
 
     print(f"[行动] {len(actors)}个居民开始行动...")
-    with ThreadPoolExecutor(max_workers=3) as executor:  # 限制并发避免API过载
+    with ThreadPoolExecutor(max_workers=2) as executor:  # 限制并发避免API过载
         futures = {}
         for cid, result, ws in actors:
             plan = result.get("plan", "")
