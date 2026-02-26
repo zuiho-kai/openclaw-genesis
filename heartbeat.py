@@ -242,10 +242,10 @@ def daily_settlement(day):
 
                         # 外部产出发布到GitHub
                         if need.get("external", False) and winner_content:
-                            if need["id"] == "daily_news":
-                                ok = publish.publish_daily_news(day, winner_content, winner)
-                            elif need["id"] == "knowledge":
-                                ok = publish.publish_knowledge(day, need["title"], winner_content, winner)
+                            if need["id"] == "daily_intel":
+                                ok = publish.publish_daily_intel(day, winner_content, winner)
+                            elif need["id"] == "open_research":
+                                ok = publish.publish_research(day, need["title"], winner_content, winner)
                             else:
                                 ok = False
                             if ok:

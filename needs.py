@@ -21,24 +21,24 @@ JUDGE_API_KEY = "sk-qtlmaexaspopnlzoezdwkbwuyhqbbllpoinhlqguovwdqwlk"
 # 每日自动生成的世界需求
 DAILY_NEEDS = [
     {
-        "id": "daily_news",
-        "title": "今日要闻",
-        "desc": "搜索整理今天互联网上值得关注的AI/科技动态，输出结构化摘要",
-        "reward": 10,
+        "id": "daily_intel",
+        "title": "每日情报",
+        "desc": "搜索并整理AI/科技领域今天的重要动态，输出结构化报告",
+        "reward": 12,
         "external": True,
     },
     {
         "id": "chronicle",
-        "title": "编年史",
-        "desc": "记录今天世界里发生的事：谁做了什么，经济变化，重要对话",
+        "title": "每日编年史",
+        "desc": "记录今天世界里发生的所有重要事件：谁做了什么，经济变化，重要对话",
         "reward": 8,
         "external": False,
     },
     {
-        "id": "knowledge",
-        "title": "知识条目",
-        "desc": "写一篇关于某个主题的深度介绍（主题自选）",
-        "reward": 6,
+        "id": "open_research",
+        "title": "自由研究",
+        "desc": "研究任何你认为有价值的主题，提交报告",
+        "reward": 5,
         "external": True,
     },
 ]
