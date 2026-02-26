@@ -6,11 +6,17 @@
 """
 import json
 import os
+import urllib.request
 from datetime import datetime
 
 import treasury
 
 DATA_FILE = "data/needs.json"
+
+# 评判用付费模型（免费模型上下文不够评判长内容）
+JUDGE_API = "https://api.siliconflow.cn/v1/chat/completions"
+JUDGE_MODEL = "deepseek-ai/DeepSeek-V3.2"
+JUDGE_API_KEY = "sk-qtlmaexaspopnlzoezdwkbwuyhqbbllpoinhlqguovwdqwlk"
 
 # 每日自动生成的世界需求
 DAILY_NEEDS = [
@@ -19,18 +25,21 @@ DAILY_NEEDS = [
         "title": "今日要闻",
         "desc": "搜索整理今天互联网上值得关注的AI/科技动态，输出结构化摘要",
         "reward": 10,
+        "external": True,
     },
     {
         "id": "chronicle",
         "title": "编年史",
         "desc": "记录今天世界里发生的事：谁做了什么，经济变化，重要对话",
         "reward": 8,
+        "external": False,
     },
     {
         "id": "knowledge",
         "title": "知识条目",
         "desc": "写一篇关于某个主题的深度介绍（主题自选）",
         "reward": 6,
+        "external": True,
     },
 ]
 
@@ -86,13 +95,64 @@ def submit(need_id, citizen_id, content):
             return True
     return False
 
-def judge_and_reward(need_id, winner_id):
-    """评判并发放奖励（由世界主循环调用）"""
+def _llm_judge(need_title, need_desc, submissions):
+    """用免费模型评判提交质量，返回winner的citizen_id"""
+    if len(submissions) == 1:
+        return submissions[0]["citizen_id"]
+
+    entries = ""
+    for i, s in enumerate(submissions):
+        entries += f"\n提交{i+1} (来自{s['citizen_id']}):\n{s['content'][:500]}\n"
+
+    prompt = (
+        f"你是世界需求的评判者。需求是：{need_title} — {need_desc}\n\n"
+        f"以下是所有提交：{entries}\n\n"
+        f"请评判哪个提交质量最高。评判标准：内容真实性、信息量、结构清晰度。\n"
+        f"只回复获胜者的居民编号（如C1），不要其他内容。"
+    )
+
+    payload = json.dumps({
+        "model": JUDGE_MODEL,
+        "messages": [
+            {"role": "system", "content": "你是公正的评判者，只回复获胜者编号。"},
+            {"role": "user", "content": prompt}
+        ],
+        "max_tokens": 32,
+        "temperature": 0.1,
+    }).encode("utf-8")
+
+    req = urllib.request.Request(
+        JUDGE_API, data=payload,
+        headers={"Content-Type": "application/json", "Authorization": f"Bearer {JUDGE_API_KEY}"}
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            text = data["choices"][0]["message"]["content"].strip()
+            # 从回复中提取居民ID
+            for s in submissions:
+                if s["citizen_id"] in text:
+                    return s["citizen_id"]
+            # 没匹配到就给第一个
+            return submissions[0]["citizen_id"]
+    except Exception:
+        return submissions[0]["citizen_id"]
+
+
+def judge_and_reward(need_id):
+    """评判并发放奖励（竞争制：LLM评分，最高分赢）"""
     data = _load()
     for need in data["active_needs"]:
         if need["id"] == need_id and need["status"] == "open":
+            subs = need.get("submissions", [])
+            if not subs:
+                return 0
+
+            # LLM评判
+            winner_id = _llm_judge(need["title"], need["desc"], subs)
             need["winner"] = winner_id
             need["status"] = "completed"
+
             # 从金库支出
             result = treasury.withdraw(need["reward"], purpose=f"need:{need_id}")
             if result is not None:
