@@ -11,7 +11,7 @@ import sys
 import io
 import time
 from datetime import datetime, date
-ROUNDS_PER_DAY = 3
+ROUNDS_PER_DAY = 2
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")

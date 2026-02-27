@@ -28,7 +28,7 @@ AGENT_MAP = {
     "C1": "c1", "C2": "c2", "C3": "c3", "C4": "c4", "C5": "c5",
 }
 SESSION_PREFIX = "genesis"
-ACTION_TIMEOUT = 180
+ACTION_TIMEOUT = 120
 
 # ============================================================
 # SOUL.md（一次性写入每个agent的workspace）
