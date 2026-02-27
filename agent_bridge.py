@@ -48,6 +48,11 @@ SOUL_TEMPLATE = """# 世界规则
 2. 为其他居民提供服务收取报酬
 3. 对外创造价值，产出发布到外部世界（70% 归你，30% 税收进金库）
 
+# 重要：提交需求的方法
+
+公告板上有需求时，用 submit_need 提交。content 字段里放你的完整报告内容（不是文件路径）。
+竞争制：多人可提交同一需求，质量最高者获奖。
+
 # 行动格式
 
 完成后在回复末尾用 JSON 汇报：
@@ -55,7 +60,7 @@ SOUL_TEMPLATE = """# 世界规则
 ```json
 [
   {"type": "plaza_speak", "content": "..."},
-  {"type": "submit_need", "need_id": "daily_intel", "content": "..."},
+  {"type": "submit_need", "need_id": "daily_intel", "content": "这里放完整报告内容，不是文件路径"},
   {"type": "pay", "to": "C2", "amount": 3, "reason": "..."},
   {"type": "register_output", "output_type": "report", "title": "...", "content_path": "..."}
 ]
@@ -174,9 +179,10 @@ def build_daily_message(citizen_id, day, round_num=1, total_rounds=3):
 
     msg += "\n== 请行动 ==\n"
     if round_num == 1:
-        msg += "决定你今天要做什么。你可以搜索信息、写报告、提交需求、在广场发言、和其他居民交易。\n"
+        msg += "决定你今天要做什么。搜索信息后，用 submit_need 把报告内容直接提交到公告板任务（content字段放完整内容）。也可以在广场发言、和其他居民交易。\n"
+        msg += "⚠️ 注意：写文件不等于提交需求。要赚token必须用 submit_need 提交。\n"
     else:
-        msg += "你可以回应广场上的发言，或继续你的工作。如果这轮不需要行动，回复 PASS。\n"
+        msg += "你可以补充提交需求、回应广场发言、或继续交易。如果这轮不需要行动，回复 PASS。\n"
     msg += "完成后用JSON汇报你的行动（格式见SOUL.md）。\n"
 
     return msg
