@@ -47,18 +47,15 @@ def get_all_citizens():
     return _load()["citizens"]
 
 def deduct_survival_cost():
-    """每日结算：扣除所有活跃居民的生存成本，回到金库"""
-    import treasury
+    """每日结算：扣除所有活跃居民的生存成本。成本真实消耗，不回金库。"""
     data = _load()
     results = {}
-    total_collected = 0
     for cid, info in data["citizens"].items():
         if info["status"] != "active":
             results[cid] = "hibernating"
             continue
         info["balance"] -= SURVIVAL_COST
         info["total_spent"] += SURVIVAL_COST
-        total_collected += SURVIVAL_COST
         if info["balance"] <= 0:
             info["balance"] = 0
             info["status"] = "hibernating"
@@ -66,9 +63,6 @@ def deduct_survival_cost():
         else:
             results[cid] = f"alive ({info['balance']} left)"
     _save(data)
-    # 生存成本回到金库（蓝图：生存成本回到金库，形成循环）
-    if total_collected > 0:
-        treasury.deposit(total_collected, source="survival_cost")
     return results
 
 def pay(from_id, to_id, amount, reason=""):

@@ -14,8 +14,8 @@ def _load():
         with open(DATA_FILE, "r", encoding="utf-8") as f:
             return json.load(f)
     return {
-        "balance": 500,        # 种子基金500 token
-        "seed_fund": 500,      # 初始种子（记录用，不再增加）
+        "balance": 800,        # 种子基金800 token（800÷55≈14.5天）
+        "seed_fund": 800,      # 初始种子（记录用，不再增加）
         "external_income": 0,  # 累计外部收入
         "total_spent": 0,      # 累计支出
         "log": []
@@ -65,7 +65,7 @@ def withdraw(amount, purpose="needs"):
 def get_status():
     """金库状态概览"""
     data = _load()
-    days_left = data["balance"] / 25 if data["balance"] > 0 else 0  # 5居民*5token/天
+    days_left = data["balance"] / 55 if data["balance"] > 0 else 0  # 25蒸发+30需求奖励
     return {
         "balance": data["balance"],
         "external_income": data["external_income"],

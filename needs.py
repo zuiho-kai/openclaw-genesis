@@ -16,7 +16,7 @@ DATA_FILE = "data/needs.json"
 # 评判用付费模型（免费模型上下文不够评判长内容）
 JUDGE_API = "https://api.siliconflow.cn/v1/chat/completions"
 JUDGE_MODEL = "deepseek-ai/DeepSeek-V3.2"
-JUDGE_API_KEY = "sk-qtlmaexaspopnlzoezdwkbwuyhqbbllpoinhlqguovwdqwlk"
+JUDGE_API_KEY = os.environ.get("SILICONFLOW_API_KEY", "")
 
 # 每日自动生成的世界需求
 DAILY_NEEDS = [
