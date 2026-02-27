@@ -33,8 +33,8 @@ def get_balance():
 def deposit(amount, source="external"):
     """外部收入存入金库"""
     data = _load()
-    data["balance"] += amount
-    data["external_income"] += amount
+    data["balance"] = round(data["balance"] + amount, 2)
+    data["external_income"] = round(data["external_income"] + amount, 2)
     data["log"].append({
         "type": "deposit",
         "amount": amount,
@@ -50,8 +50,8 @@ def withdraw(amount, purpose="needs"):
     data = _load()
     if data["balance"] < amount:
         return None  # 金库空了，发不出钱
-    data["balance"] -= amount
-    data["total_spent"] += amount
+    data["balance"] = round(data["balance"] - amount, 2)
+    data["total_spent"] = round(data["total_spent"] + amount, 2)
     data["log"].append({
         "type": "withdraw",
         "amount": amount,

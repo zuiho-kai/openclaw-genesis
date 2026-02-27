@@ -54,8 +54,8 @@ def deduct_survival_cost():
         if info["status"] != "active":
             results[cid] = "hibernating"
             continue
-        info["balance"] -= SURVIVAL_COST
-        info["total_spent"] += SURVIVAL_COST
+        info["balance"] = round(info["balance"] - SURVIVAL_COST, 2)
+        info["total_spent"] = round(info["total_spent"] + SURVIVAL_COST, 2)
         if info["balance"] <= 0:
             info["balance"] = 0
             info["status"] = "hibernating"
@@ -74,10 +74,10 @@ def pay(from_id, to_id, amount, reason=""):
         return None
     if sender["balance"] < amount:
         return None
-    sender["balance"] -= amount
-    sender["total_spent"] += amount
-    receiver["balance"] += amount
-    receiver["total_earned"] += amount
+    sender["balance"] = round(sender["balance"] - amount, 2)
+    sender["total_spent"] = round(sender["total_spent"] + amount, 2)
+    receiver["balance"] = round(receiver["balance"] + amount, 2)
+    receiver["total_earned"] = round(receiver["total_earned"] + amount, 2)
     data["transactions"].append({
         "from": from_id,
         "to": to_id,
@@ -94,8 +94,8 @@ def reward(citizen_id, amount, source="world_needs"):
     citizen = data["citizens"].get(citizen_id)
     if not citizen:
         return None
-    citizen["balance"] += amount
-    citizen["total_earned"] += amount
+    citizen["balance"] = round(citizen["balance"] + amount, 2)
+    citizen["total_earned"] = round(citizen["total_earned"] + amount, 2)
     data["transactions"].append({
         "from": "world",
         "to": citizen_id,

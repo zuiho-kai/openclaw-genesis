@@ -61,28 +61,36 @@ def _save(data):
     with open(DATA_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
 
+# 砍减优先级：金库不足时从低优先级开始砍
+NEED_PRIORITY = ["daily_intel", "chronicle", "quality_review", "open_research"]
+
 def generate_daily_needs(day):
-    """生成当天的世界需求，金库空了就不发"""
+    """生成当天的世界需求，金库不足时按优先级砍"""
     data = _load()
     data["day"] = day
 
-    # 检查金库能不能负担
     treasury_status = treasury.get_status()
     if not treasury_status["healthy"]:
         data["active_needs"] = []
         _save(data)
-        return []  # 金库告急，停发需求
+        return []
 
+    # 按优先级排序，高优先级先拿预算
+    sorted_templates = sorted(DAILY_NEEDS,
+        key=lambda t: NEED_PRIORITY.index(t["id"]) if t["id"] in NEED_PRIORITY else 99)
+    budget = treasury_status["balance"]
     needs = []
-    for template in DAILY_NEEDS:
-        need = {
-            **template,
-            "day": day,
-            "submissions": [],
-            "winner": None,
-            "status": "open",
-        }
-        needs.append(need)
+    for template in sorted_templates:
+        if budget >= template["reward"]:
+            needs.append({
+                **template,
+                "day": day,
+                "submissions": [],
+                "votes": {},
+                "winner": None,
+                "status": "open",
+            })
+            budget -= template["reward"]
 
     data["active_needs"] = needs
     _save(data)
@@ -98,6 +106,21 @@ def submit(need_id, citizen_id, content):
                 "content": content,
                 "time": datetime.now().isoformat()
             })
+            _save(data)
+            return True
+    return False
+
+def vote(need_id, citizen_id, candidate):
+    """居民为某个需求的提交投票"""
+    data = _load()
+    for need in data["active_needs"]:
+        if need["id"] == need_id and need["status"] == "open":
+            if citizen_id == candidate:
+                return False
+            if not any(s["citizen_id"] == candidate for s in need.get("submissions", [])):
+                return False
+            votes = need.setdefault("votes", {})
+            votes[citizen_id] = candidate
             _save(data)
             return True
     return False
@@ -147,7 +170,7 @@ def _llm_judge(need_title, need_desc, submissions):
 
 
 def judge_and_reward(need_id):
-    """评判并发放奖励（竞争制：LLM评分，最高分赢）"""
+    """评判并发放奖励（有投票用投票，否则LLM评分）"""
     data = _load()
     for need in data["active_needs"]:
         if need["id"] == need_id and need["status"] == "open":
@@ -155,12 +178,17 @@ def judge_and_reward(need_id):
             if not subs:
                 return 0
 
-            # LLM评判
-            winner_id = _llm_judge(need["title"], need["desc"], subs)
+            votes = need.get("votes", {})
+            if votes:
+                from collections import Counter
+                counts = Counter(votes.values())
+                winner_id = counts.most_common(1)[0][0]
+            else:
+                winner_id = _llm_judge(need["title"], need["desc"], subs)
+
             need["winner"] = winner_id
             need["status"] = "completed"
 
-            # 从金库支出
             result = treasury.withdraw(need["reward"], purpose=f"need:{need_id}")
             if result is not None:
                 from economy import reward

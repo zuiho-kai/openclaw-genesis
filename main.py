@@ -11,7 +11,7 @@ import sys
 import io
 import time
 from datetime import datetime, date
-ROUNDS_PER_DAY = 2
+ROUNDS_PER_DAY = 3
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8")
 sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8")
@@ -50,7 +50,7 @@ def init_world():
 
     ts = treasury.get_status()
     print(f"[金库] 种子基金: {ts['balance']} token，预计维持 {ts['days_left']} 天")
-    chronicle.record_event(0, "genesis", "世界创建。5个白板居民，500 token种子基金。")
+    chronicle.record_event(0, "genesis", "世界创建。5个白板居民，800 token种子基金。")
     needs_module.generate_daily_needs(1)
 
 
@@ -78,7 +78,7 @@ def run_day(day):
         print(f"\n[第{round_num}轮/{ROUNDS_PER_DAY}]")
         for cid in CITIZEN_IDS:
             try:
-                results = agent_bridge.run_citizen_turn(cid, day, round_num)
+                results = agent_bridge.run_citizen_turn(cid, day, round_num, ROUNDS_PER_DAY)
                 actions_log[cid].extend(results)
             except Exception as e:
                 print(f"  [{cid}] 异常: {e}")
