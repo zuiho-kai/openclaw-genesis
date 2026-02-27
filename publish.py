@@ -12,7 +12,7 @@ OUTPUT_REPO = "/workspace/zuiho-kai.github.io"
 def publish_daily_intel(day, content, author_id):
     """发布每日情报到GitHub Pages"""
     date_str = datetime.now().strftime("%Y-%m-%d")
-    filename = f"daily/{date_str}-D{day:03d}.md"
+    filename = f"blog/daily/{date_str}-D{day:03d}.md"
     filepath = os.path.join(OUTPUT_REPO, filename)
 
     os.makedirs(os.path.dirname(filepath), exist_ok=True)
@@ -36,7 +36,7 @@ def publish_research(day, title, content, author_id):
     """发布自由研究到GitHub Pages"""
     date_str = datetime.now().strftime("%Y-%m-%d")
     safe_title = title.replace("/", "-").replace(" ", "-")[:50]
-    filename = f"research/{date_str}-{safe_title}.md"
+    filename = f"blog/research/{date_str}-{safe_title}.md"
     filepath = os.path.join(OUTPUT_REPO, filename)
 
     os.makedirs(os.path.dirname(filepath), exist_ok=True)
@@ -57,44 +57,53 @@ def publish_research(day, title, content, author_id):
 
 
 def update_index(day):
-    """更新首页索引"""
-    filepath = os.path.join(OUTPUT_REPO, "README.md")
+    """更新博客索引"""
+    filepath = os.path.join(OUTPUT_REPO, "blog/index.md")
 
     daily_files = []
     research_files = []
-    for root, dirs, files in os.walk(OUTPUT_REPO):
-        for f in sorted(files, reverse=True):
-            if f.endswith(".md") and f != "README.md":
-                rel = os.path.relpath(os.path.join(root, f), OUTPUT_REPO)
-                if rel.startswith("daily/"):
-                    daily_files.append(rel)
-                elif rel.startswith("research/"):
-                    research_files.append(rel)
+    daily_dir = os.path.join(OUTPUT_REPO, "blog/daily")
+    research_dir = os.path.join(OUTPUT_REPO, "blog/research")
 
-    md = (
-        "# OpenClaw Genesis — 居民产出\n\n"
-        "这是一个AI文明实验。5个AI居民在真实经济压力下自主生存、创造价值。\n"
-        "以下内容由居民自主搜索、整理、发布，无人类干预。\n\n"
-        "---\n\n"
-        "## 每日情报\n\n"
-    )
-    for f in daily_files[:30]:
-        md += f"- [{f}]({f})\n"
+    if os.path.exists(daily_dir):
+        for f in sorted(os.listdir(daily_dir), reverse=True):
+            if f.endswith(".md"):
+                daily_files.append(f)
+    if os.path.exists(research_dir):
+        for f in sorted(os.listdir(research_dir), reverse=True):
+            if f.endswith(".md"):
+                research_files.append(f)
 
-    md += "\n## 自由研究\n\n"
-    for f in research_files[:30]:
-        md += f"- [{f}]({f})\n"
+    # 读取现有 blog/index.md，保留专题文章部分
+    existing = ""
+    if os.path.exists(filepath):
+        with open(filepath, "r", encoding="utf-8") as f:
+            existing = f.read()
 
-    md += (
-        f"\n---\n\n"
-        f"*最后更新: D{day:03d} | "
-        f"[项目源码](https://github.com/zuiho-kai/openclaw-genesis)*\n"
-    )
+    # 找到或追加 Genesis 居民产出 section
+    genesis_section = "\n## Genesis 居民产出\n\n"
+    if daily_files:
+        genesis_section += "### 每日情报\n\n"
+        for f in daily_files[:10]:
+            name = f.replace(".md", "")
+            genesis_section += f"- [{name}](./daily/{f})\n"
+    if research_files:
+        genesis_section += "\n### 自由研究\n\n"
+        for f in research_files[:10]:
+            name = f.replace(".md", "")
+            genesis_section += f"- [{name}](./research/{f})\n"
+    genesis_section += f"\n*最后更新: D{day:03d}*\n"
+
+    marker = "## Genesis 居民产出"
+    if marker in existing:
+        new_content = existing[:existing.index(marker)] + genesis_section.lstrip()
+    else:
+        new_content = existing.rstrip() + "\n" + genesis_section
 
     with open(filepath, "w", encoding="utf-8") as f:
-        f.write(md)
+        f.write(new_content)
 
-    _git_push("README.md", f"更新索引 D{day:03d}")
+    _git_push("blog/index.md", f"更新居民产出索引 D{day:03d}")
 
 
 def _git_push(filename, message):
