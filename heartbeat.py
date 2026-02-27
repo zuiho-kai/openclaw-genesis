@@ -36,9 +36,11 @@ def heartbeat_check(citizen_id, world_state):
         return {"action": False, "reason": "hibernating"}
     w = world_state["world"]
     prompt = (
-        f"你是居民{citizen_id}。余额{you['balance']}token，还能活{you['days_to_live']}天。\n"
-        f"世界金库{w['treasury_balance']}token。公告板有{len(world_state.get('open_needs',[]))}个需求。\n"
-        f"你需要行动吗？回复JSON：{{\"action\": true/false, \"reason\": \"简短原因\", \"plan\": \"打算做什么\"}}"
+        f"你是居民{citizen_id}。余额{you['balance']}token，每天消耗5token，还能活{you['days_to_live']}天。\n"
+        f"世界金库{w['treasury_balance']}token。公告板有{len(world_state.get('open_needs',[]))}个需求可以做。\n"
+        f"注意：你不能从金库直接取钱，只能通过完成需求或对外赚钱获得token。\n"
+        f"你需要行动吗？考虑：有没有值得做的需求？有没有想搜索的信息？\n"
+        f"回复JSON：{{\"action\": true/false, \"reason\": \"简短原因\", \"plan\": \"打算做什么\"}}"
     )
     try:
         text = _call_free_model([
@@ -63,7 +65,11 @@ def execute_action(citizen_id, world_state, plan=""):
     if plan:
         message += f"你的计划: {plan}\n\n"
     message += (
-        "请执行你的行动。你可以使用工具（搜索、浏览网页、写文件等）。\n"
+        "请执行你的行动。你有以下工具可用：\n"
+        "- web_search / web-pilot skill：搜索互联网获取最新信息\n"
+        "- web_fetch：访问网页获取内容\n"
+        "- 文件读写等基础工具\n\n"
+        "重要：做每日情报和自由研究时，必须先用搜索工具获取真实信息，不要编造内容。\n"
         "完成后，用JSON汇报：\n"
         '```json\n[{"type":"plaza_speak","content":"..."},{"type":"submit_need","need_id":"...","content":"..."}]\n```'
     )
