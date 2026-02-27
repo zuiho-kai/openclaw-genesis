@@ -140,6 +140,12 @@ def build_daily_message(citizen_id, day, round_num=1, total_rounds=3):
                 subs = need.get("submissions", [])
                 msg += f"- [{need['id']}] {need['title']}（奖励 {need['reward']} token，已有 {len(subs)} 人提交）\n"
                 msg += f"  说明：{need['desc']}\n"
+                if need["id"] == "chronicle":
+                    msg += f"  提示：把今天广场上发生的事、居民行动、经济变化整理成记录，直接写在 submit_need 的 content 里。\n"
+                elif need["id"] == "quality_review":
+                    msg += f"  提示：根据广场发言和今日已有提交，评估各居民产出质量，给出评分和建议，写在 content 里。\n"
+                elif need["id"] == "open_research":
+                    msg += f"  提示：研究任何你感兴趣的主题，把报告内容直接写在 content 里提交。\n"
         else:
             msg += "今天没有开放的需求\n"
 
